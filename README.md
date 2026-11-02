@@ -1,15 +1,15 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="apps/web/public/brand/sahara-logo-white.png" />
-  <img alt="Sahara Hospitality Suite" src="apps/web/public/brand/sahara-logo-full.png" width="380" />
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/alshan-rijal/Sahara-Hospitality-Suite/main/apps/web/public/brand/sahara-logo-white.png" />
+  <img alt="Sahara Hospitality Suite" src="https://raw.githubusercontent.com/alshan-rijal/Sahara-Hospitality-Suite/main/apps/web/public/brand/sahara-logo-full.png" width="380" />
 </picture>
 
 ### Run every hotel in your group from one calm, clear place.
 
 Front office, housekeeping, restaurants, finance, procurement, maintenance, HR, security and audit — connected end to end.
 
-<img src="docs/brand/banner.svg" alt="Sunrise over dunes: reservations, housekeeping, folio, audit — one system for every hotel in your group." width="900" />
+<img src="https://raw.githubusercontent.com/alshan-rijal/Sahara-Hospitality-Suite/main/docs/brand/banner.svg" alt="Sunrise over dunes: reservations, housekeeping, folio, audit — one system for every hotel in your group." width="900" />
 
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
@@ -508,7 +508,7 @@ Built and maintained by **Alshan Rijal**.
 [![Website](https://img.shields.io/badge/alshanrijal.com.np-2563EB?style=flat-square&logo=googlechrome&logoColor=white)](https://alshanrijal.com.np)
 [![Email](https://img.shields.io/badge/contact@alshanrijal.com.np-EA4335?style=flat-square&logo=gmail&logoColor=white)](mailto:contact@alshanrijal.com.np)
 
-<img src="docs/brand/footer.svg" alt="Built by Alshan Rijal — alshanrijal.com.np, contact@alshanrijal.com.np" width="900" />
+<img src="https://raw.githubusercontent.com/alshan-rijal/Sahara-Hospitality-Suite/main/docs/brand/footer.svg" alt="Built by Alshan Rijal — alshanrijal.com.np, contact@alshanrijal.com.np" width="900" />
 
 </div>
 
