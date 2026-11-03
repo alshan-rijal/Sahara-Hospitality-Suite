@@ -468,15 +468,20 @@ More detail:
 
 ## Screenshots
 
-Replace these placeholders with your own captures.
+### Login
+<img src="docs/screenshots/login.png" alt="Sahara Hospitality Suite login page" width="900" />
 
-| Screen | Image |
-| --- | --- |
-| Login | `docs/screenshots/login.png` |
-| Executive dashboard | `docs/screenshots/dashboard.png` |
-| Reservations | `docs/screenshots/reservations.png` |
-| Guest folios | `docs/screenshots/folios.png` |
-| Restaurant POS | `docs/screenshots/pos.png` |
+### Executive dashboard
+<img src="docs/screenshots/dashboard.png" alt="Executive dashboard with property overview" width="900" />
+
+### Reservations
+<img src="docs/screenshots/reservations.png" alt="Reservations list with check-in and checkout actions" width="900" />
+
+### Guest folios
+<img src="docs/screenshots/folios.png" alt="Guest folios with charges and settlement" width="900" />
+
+### Restaurant POS
+<img src="docs/screenshots/pos.png" alt="Restaurant POS orders and room-charge posting" width="900" />
 
 ---
 
