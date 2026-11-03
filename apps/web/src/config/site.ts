@@ -14,16 +14,16 @@ export const site = {
   author: 'Alshan Rijal',
   email: 'contact@alshanrijal.com.np',
   /** Fill in to enable phone-based features. Leave empty to hide them. */
-  phone: '',
+  phone: '+977 9743810009',
   /** Fill in (international format, digits only, e.g. 9779800000000) to enable WhatsApp. */
-  whatsapp: '',
+  whatsapp: 'https://wa.me/9779743810009',
   /** Fill in to enable the LocalBusiness structured-data block and footer address. */
   address: {
-    street: '',
-    locality: '',
-    region: '',
-    postalCode: '',
-    country: ''
+    street: 'Pachrukhi',
+    locality: 'Itahari - 5',
+    region: 'Koshi Province',
+    postalCode: '56705',
+    country: 'Nepal'
   },
   social: {
     website: 'https://alshanrijal.com.np',
