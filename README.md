@@ -263,7 +263,7 @@ cp apps/web/.env.example apps/web/.env
 
 | Variable | Example | Purpose |
 | --- | --- | --- |
-| `MONGODB_URI` | `mongodb://localhost:27017/grandstay_hotel_erp` | Database connection string |
+| `MONGODB_URI` | `mongodb://localhost:27017/sahara_hotel_erp` | Database connection string |
 | `JWT_SECRET` | a long random string | Signs session tokens. Change this before deployment |
 | `JWT_EXPIRES_IN` | `8h` | How long a session token stays valid |
 | `PORT` | `5000` | API port |
