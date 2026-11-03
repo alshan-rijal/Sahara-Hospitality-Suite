@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, X } from 'lucide-react';
 import { moduleByKey, type RowAction } from '../lib/moduleConfig';
 import { icons } from '../lib/icons';
 import { api, errorMessage } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
+import { useSeo } from '../lib/seo';
 import FormModal from '../components/FormModal';
 import ActionModal from '../components/ActionModal';
+import ConfirmDialog from '../components/ConfirmDialog';
+import EmptyState from '../components/EmptyState';
+import CopyButton from '../components/CopyButton';
 
 const get = (row: any, path: string) => path.split('.').reduce((value, key) => value?.[key], row);
 const labelValue = (value: any): string => {
@@ -15,6 +19,9 @@ const labelValue = (value: any): string => {
   if (typeof value === 'object') return value.name || value.code || value.number || value._id || JSON.stringify(value);
   return String(value);
 };
+
+/** Columns whose values are references people copy out of the app. */
+const COPYABLE = new Set(['confirmationNumber', 'folioNumber', 'number', 'orderNumber', 'eventNumber', 'sku', 'employeeCode', 'entityId', 'email']);
 
 export default function ModulePage() {
   const { moduleKey } = useParams();
@@ -30,6 +37,15 @@ export default function ModulePage() {
   const [page, setPage] = useState(1);
   const [form, setForm] = useState<{ open: boolean; row?: any }>({ open: false });
   const [actionState, setActionState] = useState<{ row: any; action: RowAction } | null>(null);
+  const [confirmState, setConfirmState] = useState<{ title: string; message: string; confirmLabel?: string; tone?: 'default' | 'danger'; run: () => Promise<void> | void } | null>(null);
+  const [flash, setFlash] = useState('');
+
+  useSeo({
+    title: `${config?.title ?? 'Module'} | Hotel Operations`,
+    description: config?.description ?? 'Hotel operations module.',
+    path: `/module/${moduleKey ?? ''}`,
+    noindex: true
+  });
 
   const load = useCallback(async () => {
     if (!config || !allowed) return;
@@ -57,7 +73,14 @@ export default function ModulePage() {
     setSearch('');
     setRows([]);
     setMeta(undefined);
+    setFlash('');
   }, [moduleKey]);
+
+  useEffect(() => {
+    if (!flash) return;
+    const timer = window.setTimeout(() => setFlash(''), 4000);
+    return () => window.clearTimeout(timer);
+  }, [flash]);
 
   const currency = user?.properties?.[0]?.currency || 'GBP';
   const format = (value: any, kind?: string) => {
@@ -69,40 +92,60 @@ export default function ModulePage() {
     return labelValue(value);
   };
 
-  const remove = async (row: any) => {
-    if (!config || !window.confirm('Delete this record? This action is audited.')) return;
-    try {
-      await api.delete(`${endpoint}/${row._id}`, { data: { reason: 'Deleted from ERP dashboard' } });
-      load();
-    } catch (err) {
-      window.alert(errorMessage(err));
-    }
+  const remove = (row: any) => {
+    if (!config) return;
+    setConfirmState({
+      title: 'Delete record',
+      message: `Delete this ${config.title.toLowerCase()} permanently? The change is written to the audit log and cannot be undone.`,
+      confirmLabel: 'Delete',
+      tone: 'danger',
+      run: async () => {
+        await api.delete(`${endpoint}/${row._id}`, { data: { reason: 'Deleted from the app' } });
+        setFlash('Record deleted. The removal is in the audit log.');
+        await load();
+      }
+    });
   };
 
-  const runAction = async (row: any, action: RowAction) => {
+  const runAction = (row: any, action: RowAction) => {
     if (!config) return;
-    if (action.confirm && !window.confirm(action.confirm)) return;
+    const direct = async () => {
+      await api.post(`${endpoint}${action.path.replace(':id', row._id)}`, action.body || {});
+      setFlash(`${action.label} completed.`);
+      await load();
+    };
     if (action.prompts?.length) {
-      setActionState({ row, action });
+      if (action.confirm) setConfirmState({ title: action.label, message: action.confirm, confirmLabel: action.label, tone: action.className === 'danger' ? 'danger' : 'default', run: () => setActionState({ row, action }) });
+      else setActionState({ row, action });
       return;
     }
-    try {
-      await api.post(`${endpoint}${action.path.replace(':id', row._id)}`, action.body || {});
-      load();
-    } catch (err) {
-      window.alert(errorMessage(err));
+    if (action.confirm) {
+      setConfirmState({ title: action.label, message: action.confirm, confirmLabel: action.label, tone: action.className === 'danger' ? 'danger' : 'default', run: direct });
+      return;
     }
+    direct().catch(err => setError(errorMessage(err)));
   };
+
+  const done = useCallback((message: string) => { setFlash(message); void load(); }, [load]);
 
   const canManage = Boolean(config?.managePermission && can(config.managePermission));
   const pages = meta?.pages || 1;
   const subtitle = useMemo(() => meta ? `${meta.total} records · Page ${meta.page} of ${meta.pages}` : `${rows.length} records`, [meta, rows.length]);
 
   if (!config) return <Navigate to="/" replace />;
-  if (!allowed) return <div className="empty-state"><h2>Access denied</h2><p>Your role does not include {config.readPermission}.</p></div>;
+  if (!allowed) {
+    return (
+      <>
+        <h1 className="sr-only">{config.title}</h1>
+        <EmptyState art="access" title="Access denied" description={`Your role does not include the ${config.readPermission} permission, so this module is hidden from your workspace.`} />
+      </>
+    );
+  }
 
   const ModuleIcon = icons[config.icon];
   const showActions = canManage || Boolean(config.actions?.some(action => can(action.permission)));
+  const colCount = config.columns.length + (showActions ? 1 : 0);
+  const singular = config.title.toLowerCase().replace(/s$/, '');
 
   return (
     <>
@@ -110,14 +153,28 @@ export default function ModulePage() {
         <div>
           <span className="module-icon"><ModuleIcon size={22} strokeWidth={2} aria-hidden /></span>
           <div>
-            <h2>{config.title}</h2>
+            <h1>{config.title}</h1>
             <p>{config.description}</p>
           </div>
         </div>
         {canManage && !config.readOnly && config.fields && (
-          <button onClick={() => setForm({ open: true })}><Plus size={16} aria-hidden /> New record</button>
+          <button onClick={() => setForm({ open: true })}><Plus size={16} aria-hidden /> New {singular}</button>
         )}
       </div>
+
+      {error && (
+        <div className="alert error" role="alert">
+          <span>{error}</span>
+          <button className="icon-button" aria-label="Dismiss error" onClick={() => setError('')}><X size={15} aria-hidden /></button>
+        </div>
+      )}
+      {flash && (
+        <div className="alert success" role="status">
+          <span>{flash}</span>
+          <button className="icon-button" aria-label="Dismiss message" onClick={() => setFlash('')}><X size={15} aria-hidden /></button>
+        </div>
+      )}
+
       <section className="panel table-panel">
         <div className="table-toolbar">
           <div>
@@ -128,40 +185,60 @@ export default function ModulePage() {
             <Search size={16} aria-hidden />
             <input
               className="search"
+              type="search"
               placeholder={`Search ${config.title.toLowerCase()}…`}
               value={search}
               onChange={event => setSearch(event.target.value)}
+              aria-label={`Search ${config.title}`}
             />
           </div>
         </div>
-        {error && <div className="alert error">{error}</div>}
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
-                {config.columns.map(column => <th key={column.key}>{column.label}</th>)}
-                {showActions && <th>Actions</th>}
+                {config.columns.map(column => <th key={column.key} scope="col">{column.label}</th>)}
+                {showActions && <th scope="col">Actions</th>}
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 Array.from({ length: 5 }).map((_, index) => (
-                  <tr key={`skeleton-${index}`}>
-                    <td colSpan={config.columns.length + (showActions ? 1 : 0)}><div className="skeleton" style={{ height: 18 }} /></td>
+                  <tr key={`skeleton-${index}`} className="skeleton-row">
+                    <td colSpan={colCount}><div className="skeleton" style={{ height: 16 }} /></td>
                   </tr>
                 ))
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={config.columns.length + (showActions ? 1 : 0)}>
-                    <div className="empty-state small">
-                      <h3>No {config.title.toLowerCase()} found</h3>
-                      <p>{search ? 'Try a different search term.' : 'Create the first record to get started.'}</p>
-                    </div>
+                  <td colSpan={colCount}>
+                    {search ? (
+                      <EmptyState small art="search" title={`No ${config.title.toLowerCase()} match “${search}”`} description="Try a shorter search term or clear the search box." action={<button className="secondary" onClick={() => setSearch('')}>Clear search</button>} />
+                    ) : (
+                      <EmptyState
+                        small
+                        title={`No ${config.title.toLowerCase()} yet`}
+                        description={config.readOnly ? 'Records will appear here as the team creates them.' : `Add the first ${singular} to get this module moving.`}
+                        action={canManage && !config.readOnly && config.fields
+                          ? <button onClick={() => setForm({ open: true })}><Plus size={16} aria-hidden /> New {singular}</button>
+                          : undefined}
+                      />
+                    )}
                   </td>
                 </tr>
               ) : rows.map(row => (
                 <tr key={row._id}>
-                  {config.columns.map(column => <td key={column.key}>{format(get(row, column.key), column.format)}</td>)}
+                  {config.columns.map(column => {
+                    const raw = get(row, column.key);
+                    const text = labelValue(raw);
+                    const copyable = COPYABLE.has(column.key) && text !== '—';
+                    return (
+                      <td key={column.key}>
+                        {copyable
+                          ? <span className="copy-cell"><span>{format(raw, column.format)}</span><CopyButton value={text} /></span>
+                          : format(raw, column.format)}
+                      </td>
+                    );
+                  })}
                   {showActions && (
                     <td>
                       <div className="row-actions">
@@ -186,6 +263,7 @@ export default function ModulePage() {
           </div>
         )}
       </section>
+
       {form.open && config.fields && (
         <FormModal
           title={`${form.row ? 'Edit' : 'New'} ${config.title}`}
@@ -193,7 +271,7 @@ export default function ModulePage() {
           initial={form.row}
           endpoint={endpoint}
           onClose={() => setForm({ open: false })}
-          onSaved={load}
+          onSaved={() => done(form.row ? 'Changes saved.' : 'Record created — it is now at the top of the list.')}
         />
       )}
       {actionState && (
@@ -203,7 +281,17 @@ export default function ModulePage() {
           fields={actionState.action.prompts || []}
           baseBody={actionState.action.body}
           onClose={() => setActionState(null)}
-          onSaved={load}
+          onSaved={() => done(`${actionState.action.label} completed.`)}
+        />
+      )}
+      {confirmState && (
+        <ConfirmDialog
+          title={confirmState.title}
+          message={confirmState.message}
+          confirmLabel={confirmState.confirmLabel}
+          tone={confirmState.tone}
+          onConfirm={confirmState.run}
+          onClose={() => setConfirmState(null)}
         />
       )}
     </>

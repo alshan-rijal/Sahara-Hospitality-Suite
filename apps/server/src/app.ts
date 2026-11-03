@@ -17,7 +17,7 @@ app.use(helmet());
 app.use(cors({origin:env.CLIENT_ORIGIN.split(',').map(v=>v.trim()),credentials:true}));
 app.use(express.json({limit:'2mb'}));
 app.use(morgan(env.NODE_ENV==='production'?'combined':'dev'));
-app.get('/api/health',(_req,res)=>res.json({status:'ok',service:'GrandStay Hotel ERP API',time:new Date().toISOString()}));
+app.get('/api/health',(_req,res)=>res.json({status:'ok',service:'Sahara Hospitality Suite API',time:new Date().toISOString()}));
 app.use('/api/auth',authRoutes);
 app.use('/api',authenticate);
 app.use('/api/admin',adminRoutes);

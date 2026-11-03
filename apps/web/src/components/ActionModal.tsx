@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Modal from './Modal';
+import Spinner from './Spinner';
 import type { PromptField } from '../lib/moduleConfig';
 import { api, errorMessage } from '../lib/api';
 
@@ -58,10 +59,13 @@ export default function ActionModal({ title, endpoint, fields, baseBody, onClose
             </label>
           ))}
         </div>
-        {error && <div className="alert error">{error}</div>}
+        {error && <div className="alert error" role="alert">{error}</div>}
         <div className="modal-actions">
-          <button type="button" className="secondary" onClick={onClose}>Cancel</button>
-          <button disabled={saving}>{saving ? 'Working…' : 'Confirm'}</button>
+          <button type="button" className="secondary" onClick={onClose} disabled={saving}>Cancel</button>
+          <button disabled={saving}>
+            {saving && <Spinner />}
+            {saving ? 'Working…' : 'Confirm'}
+          </button>
         </div>
       </form>
     </Modal>

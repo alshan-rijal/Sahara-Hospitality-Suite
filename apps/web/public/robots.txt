@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /module/
+Disallow: /dashboard
+
+Sitemap: https://sahara.alshanrijal.com.np/sitemap.xml

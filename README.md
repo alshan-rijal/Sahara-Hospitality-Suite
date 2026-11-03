@@ -89,7 +89,7 @@ The server applies this in two steps: a permission check (`authorize(...)`) and 
 
 ### Seeded roles
 
-Every seeded role uses the same password. The email is the role code plus `@grandstay.test`.
+Every seeded role uses the same password. The email is the role code plus `@sahara.test`.
 
 | Role | Code | Level | Scope | Department |
 | --- | --- | --- | --- | --- |
@@ -312,20 +312,36 @@ npm run dev
 | API | http://localhost:5000/api |
 | Health check | http://localhost:5000/api/health |
 
-### 7. Demo logins
+### 7. Demo accounts
 
-Every seeded account uses the password `Hotel@123`. The email is the role code plus `@grandstay.test`.
+The seed creates one account per role and nothing else — no guests, rooms, reservations or folios — so every module starts empty and you can add real data through the UI.
 
-| Persona | Email |
-| --- | --- |
-| Corporate admin | `corporate_admin@grandstay.test` |
-| General manager | `general_manager@grandstay.test` |
-| Front office manager | `front_office_manager@grandstay.test` |
-| Receptionist | `receptionist@grandstay.test` |
-| Housekeeping manager | `housekeeping_manager@grandstay.test` |
-| Food and beverage manager | `fnb_manager@grandstay.test` |
-| Finance manager | `finance_manager@grandstay.test` |
-| Maintenance technician | `technician@grandstay.test` |
+Every account uses the password **`Hotel@123`**. The email is the role code plus `@sahara.test`.
+
+| Role | Email | Level | Scope |
+| --- | --- | --- | --- |
+| Corporate Administrator | `corporate_admin@sahara.test` | 1 | corporate |
+| Group Owner | `group_owner@sahara.test` | 1 | corporate |
+| Corporate Finance Director | `corporate_finance@sahara.test` | 1 | corporate |
+| Regional Manager | `regional_manager@sahara.test` | 1 | property |
+| General Manager | `general_manager@sahara.test` | 2 | property |
+| Front Office Manager | `front_office_manager@sahara.test` | 2 | property |
+| Housekeeping Manager | `housekeeping_manager@sahara.test` | 2 | department |
+| Food & Beverage Manager | `fnb_manager@sahara.test` | 2 | department |
+| Finance Manager | `finance_manager@sahara.test` | 2 | property |
+| Purchase Manager | `purchase_manager@sahara.test` | 2 | property |
+| Engineering Manager | `engineering_manager@sahara.test` | 2 | department |
+| HR Manager | `hr_manager@sahara.test` | 2 | property |
+| Sales & Banquet Manager | `sales_manager@sahara.test` | 2 | property |
+| Security Manager | `security_manager@sahara.test` | 2 | department |
+| Receptionist | `receptionist@sahara.test` | 3 | property |
+| Night Auditor | `night_auditor@sahara.test` | 3 | property |
+| Room Attendant | `room_attendant@sahara.test` | 3 | department |
+| Waiter / POS Operator | `waiter@sahara.test` | 3 | department |
+| Storekeeper | `storekeeper@sahara.test` | 3 | department |
+| Maintenance Technician | `technician@sahara.test` | 3 | department |
+
+> **Reseed required.** The seed was changed to use `@sahara.test` emails and to stop inserting example operational data. After pulling this change, run `npm run seed` once so the accounts, properties and roles match. This drops and rebuilds the database.
 
 ### 8. Build for production
 

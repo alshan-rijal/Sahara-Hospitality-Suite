@@ -1,0 +1,31 @@
+# Sahara Hospitality Suite
+
+> Multi-property hotel management software for hotel groups. It connects the front desk, housekeeping, restaurants, inventory, procurement, finance, HR, security and audit in one system, with role-based access that is enforced on the API rather than in the browser.
+
+## What it does
+
+- Front office: guests and CRM, reservations, check-in and check-out, room status.
+- Housekeeping: cleaning tasks, assignment, inspection.
+- Restaurant POS: outlet orders and posting charges back to a guest folio.
+- Finance: folios, charges, settlement, refunds and reconciliation.
+- Procurement and inventory: stock levels, reorder points, purchase requisitions and approvals.
+- Maintenance: engineering work orders and asset repairs.
+- People: employees, departments and payroll access.
+- Security and audit: incident reporting and an immutable activity log.
+
+## Access model
+
+Three levels — corporate, property manager and operational — over four scopes (corporate, property, department, self). Every request is checked against a fine-grained permission and limited to the properties and departments assigned to the account.
+
+## Public pages
+
+- /login — sign in.
+- /help — help centre and FAQ.
+
+Application pages (/ and /module/*) are private and require authentication.
+
+## Contact
+
+- Email: contact@alshanrijal.com.np
+- Website: https://alshanrijal.com.np
+- Source: https://github.com/alshan-rijal/Sahara-Hospitality-Suite

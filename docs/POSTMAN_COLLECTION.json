@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "GrandStay Hotel ERP",
+    "name": "Sahara Hospitality Suite",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -16,7 +16,7 @@
           "request": {
             "method": "POST",
             "header": [{"key": "Content-Type", "value": "application/json"}],
-            "body": {"mode": "raw", "raw": "{\n  \"email\": \"corporate_admin@grandstay.test\",\n  \"password\": \"Hotel@123\"\n}"},
+            "body": {"mode": "raw", "raw": "{\n  \"email\": \"corporate_admin@sahara.test\",\n  \"password\": \"Hotel@123\"\n}"},
             "url": {"raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"]}
           }
         },

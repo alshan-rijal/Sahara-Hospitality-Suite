@@ -1,27 +1,30 @@
 import { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
-import { LogIn, Mail, Globe, UserRound } from 'lucide-react';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { LogIn, Mail, Globe, UserRound, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { errorMessage } from '../lib/api';
-
-const demos = [
-  ['Corporate Admin', 'corporate_admin@grandstay.test'],
-  ['General Manager', 'general_manager@grandstay.test'],
-  ['Front Office', 'front_office_manager@grandstay.test'],
-  ['Receptionist', 'receptionist@grandstay.test'],
-  ['Housekeeping', 'housekeeping_manager@grandstay.test'],
-  ['F&B Manager', 'fnb_manager@grandstay.test'],
-  ['Finance Manager', 'finance_manager@grandstay.test'],
-  ['Technician', 'technician@grandstay.test']
-];
+import { useSeo } from '../lib/seo';
+import { site } from '../config/site';
+import PasswordInput from '../components/PasswordInput';
+import Spinner from '../components/Spinner';
+import FloatingContact from '../components/FloatingContact';
+import SiteJsonLd from '../components/SiteJsonLd';
+import { breadcrumbSchema } from '../lib/structuredData';
 
 export default function LoginPage() {
   const { user, login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('corporate_admin@grandstay.test');
-  const [password, setPassword] = useState('Hotel@123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useSeo({
+    title: `Sign in | ${site.name}`,
+    description: 'Sign in to manage reservations, housekeeping, folios and every department across your properties.',
+    path: '/login',
+    jsonLd: breadcrumbSchema([{ name: 'Home', path: '/' }, { name: 'Sign in', path: '/login' }])
+  });
 
   if (user) return <Navigate to="/" replace />;
 
@@ -30,7 +33,7 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
     try {
-      await login(email, password);
+      await login(email.trim(), password);
       navigate('/');
     } catch (err) {
       setError(errorMessage(err));
@@ -41,6 +44,8 @@ export default function LoginPage() {
 
   return (
     <div className="login-page">
+      <SiteJsonLd />
+      <FloatingContact />
       <section className="login-visual">
         <div className="login-aura" aria-hidden><span /><span /><span /></div>
         <svg className="login-waves" viewBox="0 0 2880 320" preserveAspectRatio="none" aria-hidden>
@@ -51,10 +56,10 @@ export default function LoginPage() {
         </svg>
         <div className="visual-content">
           <div className="brand">
-            <img className="brand-logo" src="/brand/sahara-logo-white.png" alt="Sahara Hospitality Suite" />
+            <img className="brand-logo" src="/brand/sahara-logo-white.png" alt="Sahara Hospitality Suite" width="1000" height="248" />
           </div>
-          <h1>One operating system for every hotel department.</h1>
-          <p>Multi-property control, property-scoped access and complete guest-to-finance workflows — from the front desk to the back office.</p>
+          <h2 className="visual-title">Run the whole hotel from one calm place.</h2>
+          <p>Front desk, housekeeping, restaurants, finance and engineering share a single record — no end-of-shift re-typing, no missing charges.</p>
           <div className="feature-grid">
             <div><b>20</b><span>Seeded roles</span></div>
             <div><b>14+</b><span>Working modules</span></div>
@@ -65,40 +70,36 @@ export default function LoginPage() {
       </section>
       <section className="login-panel">
         <form className="login-card" onSubmit={submit}>
-          <img className="login-logo" src="/brand/sahara-logo-full.png" alt="Sahara Hospitality Suite" />
+          <img className="login-logo" src="/brand/sahara-logo-full.png" alt="Sahara Hospitality Suite" width="1000" height="262" />
           <div>
-            <h2>Welcome back</h2>
-            <p>Sign in with your hotel account to pick up where you left off.</p>
+            <h1>Welcome back</h1>
+            <p>Sign in to pick up your shift exactly where the last one ended.</p>
           </div>
           <label>
             <span>Email address</span>
-            <input type="email" value={email} placeholder="you@yourhotel.com" onChange={event => setEmail(event.target.value)} required />
+            <input
+              type="email"
+              value={email}
+              placeholder="name@hotel.com"
+              autoComplete="username"
+              onChange={event => setEmail(event.target.value)}
+              required
+            />
           </label>
           <label>
             <span>Password</span>
-            <input type="password" value={password} placeholder="Enter your password" onChange={event => setPassword(event.target.value)} required />
+            <PasswordInput value={password} onChange={setPassword} placeholder="Your password" required />
           </label>
-          {error && <div className="alert error">{error}</div>}
+          {error && <div className="alert error" role="alert">{error}</div>}
           <button className="login-button" disabled={loading}>
-            <LogIn size={17} aria-hidden />
+            {loading ? <Spinner /> : <LogIn size={17} aria-hidden />}
             {loading ? 'Signing you in…' : 'Sign in'}
           </button>
-          <div className="demo-box">
-            <strong>Try a demo account</strong>
-            <p>Tap any role below — every demo account uses <code>Hotel@123</code>.</p>
-            <div className="demo-list">
-              {demos.map(([label, value]) => (
-                <button type="button" key={value} onClick={() => { setEmail(value); setPassword('Hotel@123'); }}>
-                  <span>{label}</span>
-                  <small>{value}</small>
-                </button>
-              ))}
-            </div>
-          </div>
           <div className="login-credit">
-            <a href="https://alshanrijal.com.np" target="_blank" rel="noreferrer"><UserRound size={13} aria-hidden /> Built by Alshan Rijal</a>
-            <a href="https://alshanrijal.com.np" target="_blank" rel="noreferrer"><Globe size={13} aria-hidden /> alshanrijal.com.np</a>
-            <a href="mailto:contact@alshanrijal.com.np"><Mail size={13} aria-hidden /> contact@alshanrijal.com.np</a>
+            <Link to="/help"><ArrowRight size={13} aria-hidden /> Help &amp; FAQ</Link>
+            <a href={site.social.website} target="_blank" rel="noreferrer"><UserRound size={13} aria-hidden /> Built by {site.author}</a>
+            <a href={`mailto:${site.email}`}><Mail size={13} aria-hidden /> {site.email}</a>
+            <a href={site.social.website} target="_blank" rel="noreferrer"><Globe size={13} aria-hidden /> {site.social.website.replace('https://', '')}</a>
           </div>
         </form>
       </section>

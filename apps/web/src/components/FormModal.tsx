@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Modal from './Modal';
+import Spinner from './Spinner';
+import PasswordInput from './PasswordInput';
 import type { FieldConfig, FieldOption } from '../lib/moduleConfig';
 import { api, errorMessage } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
@@ -23,6 +25,7 @@ export default function FormModal({ title, fields, initial, onClose, onSaved, en
   const [options, setOptions] = useState<Record<string, FieldOption[]>>({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const start: Record<string, any> = {};
@@ -71,10 +74,37 @@ export default function FormModal({ title, fields, initial, onClose, onSaved, en
     label: `${property.code} — ${property.name}`
   })), [user]);
 
+  const setField = (name: string, value: any) => {
+    setValues(current => ({ ...current, [name]: value }));
+    setFieldErrors(current => {
+      if (!current[name]) return current;
+      const next = { ...current };
+      delete next[name];
+      return next;
+    });
+  };
+
+  /** Friendly, field-level checks that run before the request is sent. */
+  const validate = () => {
+    const errors: Record<string, string> = {};
+    for (const field of fields) {
+      const value = values[field.name];
+      const empty = value === '' || value === null || value === undefined || (Array.isArray(value) && value.length === 0);
+      if (field.required && empty) { errors[field.name] = `${field.label} is required.`; continue; }
+      if (empty) continue;
+      if (field.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value))) errors[field.name] = 'Enter a valid email address, like name@hotel.com.';
+      if (field.type === 'number' && Number.isNaN(Number(value))) errors[field.name] = 'Enter a number.';
+      if (field.type === 'password' && String(value).length > 0 && String(value).length < 8) errors[field.name] = 'Use at least 8 characters.';
+    }
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setSaving(true);
     setError('');
+    if (!validate()) return;
+    setSaving(true);
     try {
       const body: Record<string, any> = {};
       for (const field of fields) {
@@ -97,36 +127,46 @@ export default function FormModal({ title, fields, initial, onClose, onSaved, en
     }
   };
 
+  const describedBy = (field: FieldConfig) => fieldErrors[field.name] ? `error-${field.name}` : undefined;
+  const inputProps = (field: FieldConfig) => ({ 'aria-invalid': Boolean(fieldErrors[field.name]), 'aria-describedby': describedBy(field) });
+  const errorNote = (field: FieldConfig) => fieldErrors[field.name] ? <small className="field-error" id={`error-${field.name}`} role="alert">{fieldErrors[field.name]}</small> : null;
+
   return (
     <Modal title={title} onClose={onClose}>
-      <form onSubmit={submit}>
+      <form onSubmit={submit} noValidate>
         <div className="form-grid">
           {fields.map(field => (
             <label key={field.name} className={field.type === 'textarea' || field.type === 'json' ? 'full' : ''}>
               <span>{field.label}{field.required ? ' *' : ''}</span>
               {field.type === 'textarea' || field.type === 'json' ? (
-                <textarea rows={field.type === 'json' ? 7 : 3} value={values[field.name] ?? ''} placeholder={field.placeholder} onChange={event => setValues(current => ({ ...current, [field.name]: event.target.value }))} />
+                <textarea rows={field.type === 'json' ? 7 : 3} value={values[field.name] ?? ''} placeholder={field.placeholder} onChange={event => setField(field.name, event.target.value)} {...inputProps(field)} />
               ) : field.type === 'select' ? (
-                <select value={values[field.name] ?? ''} required={field.required} onChange={event => setValues(current => ({ ...current, [field.name]: event.target.value }))}>
+                <select value={values[field.name] ?? ''} onChange={event => setField(field.name, event.target.value)} {...inputProps(field)}>
                   <option value="">Select…</option>
                   {(field.options || options[field.name] || []).map(option => <option key={String(option.value)} value={option.value}>{option.label}</option>)}
                 </select>
               ) : field.type === 'multi-property' ? (
-                <select multiple value={values[field.name] || []} required={field.required} onChange={event => setValues(current => ({ ...current, [field.name]: Array.from(event.target.selectedOptions).map(option => option.value) }))}>
+                <select multiple value={values[field.name] || []} onChange={event => setField(field.name, Array.from(event.target.selectedOptions).map(option => option.value))} {...inputProps(field)}>
                   {propertyOptions.map(option => <option key={String(option.value)} value={option.value}>{option.label}</option>)}
                 </select>
               ) : field.type === 'boolean' ? (
-                <input className="check" type="checkbox" checked={Boolean(values[field.name])} onChange={event => setValues(current => ({ ...current, [field.name]: event.target.checked }))} />
+                <input className="check" type="checkbox" checked={Boolean(values[field.name])} onChange={event => setField(field.name, event.target.checked)} />
+              ) : field.type === 'password' ? (
+                <PasswordInput value={values[field.name] ?? ''} onChange={value => setField(field.name, value)} placeholder={field.placeholder} autoComplete="new-password" name={field.name} />
               ) : (
-                <input type={field.type || 'text'} required={field.required} value={values[field.name] ?? ''} placeholder={field.placeholder} onChange={event => setValues(current => ({ ...current, [field.name]: event.target.value }))} />
+                <input type={field.type || 'text'} value={values[field.name] ?? ''} placeholder={field.placeholder} onChange={event => setField(field.name, event.target.value)} {...inputProps(field)} />
               )}
+              {errorNote(field)}
             </label>
           ))}
         </div>
-        {error && <div className="alert error">{error}</div>}
+        {error && <div className="alert error" role="alert">{error}</div>}
         <div className="modal-actions">
-          <button type="button" className="secondary" onClick={onClose}>Cancel</button>
-          <button disabled={saving}>{saving ? 'Saving…' : isEdit ? 'Save changes' : 'Create record'}</button>
+          <button type="button" className="secondary" onClick={onClose} disabled={saving}>Cancel</button>
+          <button disabled={saving}>
+            {saving && <Spinner />}
+            {saving ? 'Saving…' : isEdit ? 'Save changes' : 'Create record'}
+          </button>
         </div>
       </form>
     </Modal>

@@ -31,6 +31,14 @@ flat(180, join(root, 'apple-touch-icon.png'));
 flat(192, join(root, 'android-chrome-192x192.png'));
 flat(512, join(root, 'android-chrome-512x512.png'));
 
+// Social preview card: the white logo centred on the brand navy (Open Graph / Twitter).
+run([
+  '-f', 'lavfi', '-i', `color=c=${NAVY}:s=1200x630`,
+  '-i', join(brand, 'sahara-logo-white.png'),
+  '-filter_complex', '[1:v]scale=780:-1[lg];[0:v][lg]overlay=(W-w)/2:(H-h)/2',
+  '-frames:v', '1', '-update', '1', join(root, 'og-image.png')
+]);
+
 // favicon.ico: header + ICONDIR entries that wrap the PNG bytes (Vista+ supports PNG-in-ICO).
 const icoPngs = [
   readFileSync(join(root, 'favicon-16x16.png')),
